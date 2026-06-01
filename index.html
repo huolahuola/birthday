@@ -54,7 +54,7 @@
       authDomain: "ourworldcup2026.firebaseapp.com",
       databaseURL: "https://ourworldcup2026-default-rtdb.firebaseio.com",
       projectId: "ourworldcup2026",
-      storageBucket: "ourworldcup2026.appspot.com",
+      storageBucket: "ourworldcup2026.firebasestorage.app",
       messagingSenderId: "184495756656",
       appId: "1:184495756656:web:33c3bdcf5aa56a3e54ebb5"
     };
@@ -132,11 +132,11 @@
         <div id="dropLabel">
           <div class="text-3xl mb-2">📁</div>
           <p class="font-bold text-sm mb-1">点击选择文件，或拖拽到这里</p>
-          <p class="text-xs" style="color:var(--gray)">支持 .pptx .ppt .docx .doc .pdf .key .mp4 .mov .webm</p>
+          <p class="text-xs" style="color:var(--gray)">支持 PPT · Word · PDF · 视频 · 图片（最大 300MB）</p>
         </div>
         <div id="fileChosen" class="hidden text-sm font-bold" style="color:var(--pink)"></div>
       </div>
-      <input type="file" id="fileInput" class="hidden" accept=".pptx,.ppt,.docx,.doc,.pdf,.key,.mp4,.mov,.webm,.avi" onchange="onFileChosen(event)">
+      <input type="file" id="fileInput" class="hidden" accept=".pptx,.ppt,.docx,.doc,.pdf,.key,.mp4,.mov,.webm,.avi,.jpg,.jpeg,.png,.gif,.webp,.heic" onchange="onFileChosen(event)">
     </div>
 
     <div id="progressWrap" class="hidden mb-4">
@@ -180,6 +180,12 @@ const FILE_BADGES = {
   mov:  { label: '视频', bg: '#8b5cf6', text: '#fff' },
   webm: { label: '视频', bg: '#8b5cf6', text: '#fff' },
   avi:  { label: '视频', bg: '#8b5cf6', text: '#fff' },
+  jpg:  { label: '图片', bg: '#ec4899', text: '#fff' },
+  jpeg: { label: '图片', bg: '#ec4899', text: '#fff' },
+  png:  { label: '图片', bg: '#ec4899', text: '#fff' },
+  gif:  { label: '图片', bg: '#ec4899', text: '#fff' },
+  webp: { label: '图片', bg: '#ec4899', text: '#fff' },
+  heic: { label: '图片', bg: '#ec4899', text: '#fff' },
 };
 
 function getExt(name) { return (name.split('.').pop() || '').toLowerCase(); }
@@ -279,9 +285,11 @@ window._renderGallery = function(items) {
     const date = new Date(item.ts);
     const dateStr = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2,'0')}`;
     const isVideo = ['mp4','mov','webm','avi'].includes(item.ext);
+    const isImage = ['jpg','jpeg','png','gif','webp','heic'].includes(item.ext);
+    const icon = isVideo ? '🎬' : isImage ? '🖼️' : item.ext === 'pdf' ? '📄' : ['ppt','pptx'].includes(item.ext) ? '📊' : ['doc','docx'].includes(item.ext) ? '📝' : '📁';
     return `<div class="glass rounded-3xl p-5 mb-3 fade-up" style="animation-delay:${i*0.05}s">
       <div class="flex items-start gap-3">
-        <div class="text-3xl">${isVideo ? '🎬' : item.ext === 'pdf' ? '📄' : ['ppt','pptx'].includes(item.ext) ? '📊' : ['doc','docx'].includes(item.ext) ? '📝' : '📁'}</div>
+        <div class="text-3xl">${icon}</div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-1 flex-wrap">
             <span class="badge" style="background:${badge.bg};color:${badge.text}">${badge.label}</span>
@@ -307,8 +315,11 @@ function viewFile(url, ext, title, dlUrl) {
   document.getElementById('viewDownload').download = title;
   const body = document.getElementById('viewBody');
   const isVideo = ['mp4','mov','webm','avi'].includes(ext);
+  const isImage = ['jpg','jpeg','png','gif','webp','heic'].includes(ext);
   if (isVideo) {
     body.innerHTML = `<video src="${url}" controls style="width:100%;max-height:60vh;background:#000"></video>`;
+  } else if (isImage) {
+    body.innerHTML = `<div style="overflow:auto;max-height:60vh;text-align:center;padding:12px"><img src="${url}" style="max-width:100%;border-radius:12px"></div>`;
   } else if (ext === 'pdf') {
     body.innerHTML = `<iframe src="${url}" style="width:100%;height:60vh;border:none"></iframe>`;
   } else {
