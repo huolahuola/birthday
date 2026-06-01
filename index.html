@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>火龙果生日冷知识发布会 🎂</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --pink: #f472b6;
+      --magenta: #e879f9;
+      --purple: #a78bfa;
+      --yellow: #fbbf24;
+      --bg: #0d0718;
+      --card: rgba(255,255,255,0.05);
+      --border: rgba(244,114,182,0.2);
+      --text: #f1f5f9;
+      --gray: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, 'PingFang SC', sans-serif; min-height: 100vh; }
+    .glass { background: var(--card); backdrop-filter: blur(16px); border: 1px solid var(--border); }
+    input, textarea { background: rgba(255,255,255,0.06); border: 1px solid rgba(244,114,182,0.25); color: var(--text); border-radius: 12px; padding: 12px 14px; outline: none; width: 100%; font-size: 15px; }
+    input:focus, textarea:focus { border-color: var(--pink); }
+    input::placeholder, textarea::placeholder { color: #475569; }
+    .btn-pink { background: linear-gradient(135deg, var(--pink), var(--magenta)); color: white; border: none; border-radius: 14px; padding: 14px 28px; font-weight: 800; font-size: 15px; cursor: pointer; transition: opacity .15s, transform .1s; }
+    .btn-pink:hover { opacity: .9; }
+    .btn-pink:active { transform: scale(.97); }
+    .btn-pink:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .drop-zone { border: 2px dashed rgba(244,114,182,0.35); border-radius: 18px; padding: 32px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--pink); background: rgba(244,114,182,0.06); }
+    .progress-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--pink), var(--magenta)); transition: width .2s; }
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+    .fade-up { animation: fadeUp .4s ease forwards; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .float { animation: float 3s ease-in-out infinite; }
+    .confetti-char { display:inline-block; animation: float 2s ease-in-out infinite; }
+    .confetti-char:nth-child(2){animation-delay:.3s}
+    .confetti-char:nth-child(3){animation-delay:.6s}
+    .confetti-char:nth-child(4){animation-delay:.9s}
+    .confetti-char:nth-child(5){animation-delay:1.2s}
+  </style>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+    import { getStorage, ref as sRef, uploadBytesResumable, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+
+    const FB = {
+      apiKey: "AIzaSyDT6oh03xq_jwZVElEt86K2_RMcz5fskf8",
+      authDomain: "ourworldcup2026.firebaseapp.com",
+      databaseURL: "https://ourworldcup2026-default-rtdb.firebaseio.com",
+      projectId: "ourworldcup2026",
+      storageBucket: "ourworldcup2026.appspot.com",
+      messagingSenderId: "184495756656",
+      appId: "1:184495756656:web:33c3bdcf5aa56a3e54ebb5"
+    };
+    const app = initializeApp(FB);
+    const db = getDatabase(app);
+    const storage = getStorage(app);
+
+    window._fbReady = true;
+    window._db = db;
+    window._storage = storage;
+    window._push = push;
+    window._ref = ref;
+    window._sRef = sRef;
+    window._uploadBytesResumable = uploadBytesResumable;
+    window._getDownloadURL = getDownloadURL;
+    window._onValue = onValue;
+
+    // Load gallery on start
+    onValue(ref(db, 'birthday/presentations'), snap => {
+      const data = snap.val() || {};
+      window._renderGallery(Object.entries(data).map(([id, v]) => ({ id, ...v })).reverse());
+    });
+  </script>
+</head>
+<body>
+
+<!-- View Modal -->
+<div id="viewModal" class="modal-bg hidden" onclick="if(event.target===this)closeView()">
+  <div class="glass rounded-3xl w-full max-w-3xl fade-up" style="max-height:90vh;overflow:hidden;display:flex;flex-direction:column">
+    <div class="flex items-center justify-between p-4" style="border-bottom:1px solid var(--border)">
+      <h3 id="viewTitle" class="font-black text-base"></h3>
+      <button onclick="closeView()" style="color:var(--gray);font-size:24px;line-height:1;background:none;border:none;cursor:pointer">&times;</button>
+    </div>
+    <div id="viewBody" class="flex-1 overflow-hidden" style="min-height:300px"></div>
+    <div class="p-4 flex gap-3">
+      <a id="viewDownload" href="#" download class="btn-pink text-sm py-2.5 px-5" style="display:inline-block;text-decoration:none">⬇ 下载</a>
+      <button onclick="closeView()" class="py-2.5 px-5 rounded-2xl text-sm font-bold" style="background:rgba(255,255,255,0.07);color:var(--gray);border:none;cursor:pointer">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="text-center pt-12 pb-6 px-4" style="background:radial-gradient(ellipse at 50% 0%, rgba(233,121,249,0.15) 0%, transparent 70%)">
+  <div class="text-5xl mb-3">
+    <span class="confetti-char">🎂</span>
+    <span class="confetti-char">🎉</span>
+    <span class="confetti-char">🎊</span>
+    <span class="confetti-char">✨</span>
+    <span class="confetti-char">🎈</span>
+  </div>
+  <h1 class="text-3xl font-black mb-2" style="background:linear-gradient(135deg,var(--pink),var(--magenta),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+    火龙果生日快乐！
+  </h1>
+  <p class="text-sm" style="color:var(--gray)">大家把自己的冷知识 presentation 传上来吧 🐉</p>
+</div>
+
+<!-- Upload Section -->
+<div class="max-w-lg mx-auto px-4 mb-10">
+  <div class="glass rounded-3xl p-6">
+    <h2 class="font-black text-base mb-5">📤 上传你的 Presentation</h2>
+
+    <div class="mb-4">
+      <p class="text-xs font-bold mb-1.5" style="color:var(--gray)">你的名字</p>
+      <input type="text" id="uploaderName" placeholder="比如：小明、Cecilia..." maxlength="20">
+    </div>
+
+    <div class="mb-4">
+      <p class="text-xs font-bold mb-1.5" style="color:var(--gray)">冷知识标题</p>
+      <input type="text" id="uploadTitle" placeholder="比如：《为什么猫会发出咕噜声》" maxlength="50">
+    </div>
+
+    <div class="mb-5">
+      <p class="text-xs font-bold mb-1.5" style="color:var(--gray)">文件（PPT / Word / PDF / 视频，最大 300MB）</p>
+      <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInput').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <div id="dropLabel">
+          <div class="text-3xl mb-2">📁</div>
+          <p class="font-bold text-sm mb-1">点击选择文件，或拖拽到这里</p>
+          <p class="text-xs" style="color:var(--gray)">支持 .pptx .ppt .docx .doc .pdf .key .mp4 .mov .webm</p>
+        </div>
+        <div id="fileChosen" class="hidden text-sm font-bold" style="color:var(--pink)"></div>
+      </div>
+      <input type="file" id="fileInput" class="hidden" accept=".pptx,.ppt,.docx,.doc,.pdf,.key,.mp4,.mov,.webm,.avi" onchange="onFileChosen(event)">
+    </div>
+
+    <div id="progressWrap" class="hidden mb-4">
+      <div class="flex justify-between text-xs mb-1" style="color:var(--gray)">
+        <span>上传中...</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div id="uploadMsg" class="hidden text-sm text-center font-bold mb-3 py-2 rounded-xl"></div>
+
+    <button class="btn-pink w-full" onclick="doUpload()" id="uploadBtn">🚀 上传</button>
+  </div>
+</div>
+
+<!-- Gallery -->
+<div class="max-w-2xl mx-auto px-4 pb-16">
+  <h2 class="font-black text-base mb-4">🎤 大家的冷知识</h2>
+  <div id="gallery">
+    <div class="text-center py-12" style="color:var(--gray)">
+      <div class="text-4xl mb-2">🌀</div>
+      <p class="text-sm">加载中...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+let _selectedFile = null;
+
+const FILE_BADGES = {
+  pptx: { label: 'PPT', bg: '#f97316', text: '#fff' },
+  ppt:  { label: 'PPT', bg: '#f97316', text: '#fff' },
+  docx: { label: 'Word', bg: '#3b82f6', text: '#fff' },
+  doc:  { label: 'Word', bg: '#3b82f6', text: '#fff' },
+  pdf:  { label: 'PDF', bg: '#ef4444', text: '#fff' },
+  key:  { label: 'Keynote', bg: '#06b6d4', text: '#fff' },
+  mp4:  { label: '视频', bg: '#8b5cf6', text: '#fff' },
+  mov:  { label: '视频', bg: '#8b5cf6', text: '#fff' },
+  webm: { label: '视频', bg: '#8b5cf6', text: '#fff' },
+  avi:  { label: '视频', bg: '#8b5cf6', text: '#fff' },
+};
+
+function getExt(name) { return (name.split('.').pop() || '').toLowerCase(); }
+
+function onDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
+function onDragLeave(e) { document.getElementById('dropZone').classList.remove('drag-over'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) setFile(f);
+}
+function onFileChosen(e) { if (e.target.files[0]) setFile(e.target.files[0]); }
+function setFile(f) {
+  _selectedFile = f;
+  const mb = (f.size / 1024 / 1024).toFixed(1);
+  document.getElementById('dropLabel').classList.add('hidden');
+  const chosen = document.getElementById('fileChosen');
+  chosen.classList.remove('hidden');
+  chosen.textContent = `✅  ${f.name}  (${mb} MB)`;
+}
+
+async function doUpload() {
+  const name = document.getElementById('uploaderName').value.trim();
+  const title = document.getElementById('uploadTitle').value.trim();
+  const file = _selectedFile;
+
+  if (!name) { showMsg('请填写你的名字 😊', false); return; }
+  if (!title) { showMsg('请填写冷知识标题 🧊', false); return; }
+  if (!file) { showMsg('请先选择文件 📁', false); return; }
+  if (file.size > 300 * 1024 * 1024) { showMsg('文件超过 300MB，请压缩后再试', false); return; }
+  if (!window._fbReady) { showMsg('Firebase 连接中，请稍后...', false); return; }
+
+  const btn = document.getElementById('uploadBtn');
+  btn.disabled = true;
+  document.getElementById('progressWrap').classList.remove('hidden');
+
+  const ext = getExt(file.name);
+  const safeFilename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._一-鿿-]/g, '_')}`;
+  const storageRef = window._sRef(window._storage, `birthday/uploads/${safeFilename}`);
+  const task = window._uploadBytesResumable(storageRef, file);
+
+  task.on('state_changed',
+    snap => {
+      const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressPct').textContent = pct + '%';
+    },
+    err => {
+      console.error(err);
+      showMsg('上传失败: ' + err.message, false);
+      btn.disabled = false;
+      document.getElementById('progressWrap').classList.add('hidden');
+    },
+    async () => {
+      const url = await window._getDownloadURL(task.snapshot.ref);
+      await window._push(window._ref(window._db, 'birthday/presentations'), {
+        name, title, url, ext,
+        filename: file.name,
+        size: file.size,
+        ts: Date.now()
+      });
+      showMsg('🎉 上传成功！', true);
+      document.getElementById('uploaderName').value = '';
+      document.getElementById('uploadTitle').value = '';
+      _selectedFile = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('dropLabel').classList.remove('hidden');
+      document.getElementById('fileChosen').classList.add('hidden');
+      document.getElementById('progressWrap').classList.add('hidden');
+      btn.disabled = false;
+    }
+  );
+}
+
+function showMsg(msg, ok) {
+  const el = document.getElementById('uploadMsg');
+  el.textContent = msg;
+  el.style.background = ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)';
+  el.style.color = ok ? '#4ade80' : '#f87171';
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 4000);
+}
+
+window._renderGallery = function(items) {
+  const el = document.getElementById('gallery');
+  if (!items.length) {
+    el.innerHTML = `<div class="text-center py-16" style="color:#475569">
+      <div class="text-5xl mb-3">🎈</div>
+      <p class="font-bold">还没有人上传，快来第一个！</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML = items.map((item, i) => {
+    const badge = FILE_BADGES[item.ext] || { label: item.ext?.toUpperCase() || '文件', bg: '#64748b', text: '#fff' };
+    const mb = (item.size / 1024 / 1024).toFixed(1);
+    const date = new Date(item.ts);
+    const dateStr = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2,'0')}`;
+    const isVideo = ['mp4','mov','webm','avi'].includes(item.ext);
+    return `<div class="glass rounded-3xl p-5 mb-3 fade-up" style="animation-delay:${i*0.05}s">
+      <div class="flex items-start gap-3">
+        <div class="text-3xl">${isVideo ? '🎬' : item.ext === 'pdf' ? '📄' : ['ppt','pptx'].includes(item.ext) ? '📊' : ['doc','docx'].includes(item.ext) ? '📝' : '📁'}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span class="badge" style="background:${badge.bg};color:${badge.text}">${badge.label}</span>
+            <span class="text-xs font-bold" style="color:var(--pink)">${item.name}</span>
+            <span class="text-xs" style="color:var(--gray)">${dateStr}</span>
+          </div>
+          <p class="font-black text-sm leading-snug mb-3">${item.title}</p>
+          <div class="flex gap-2">
+            <button onclick="viewFile('${item.url}','${item.ext}','${item.title.replace(/'/g,"\\'")}','${item.url}')"
+              class="btn-pink text-xs py-2 px-4">👁 查看</button>
+            <a href="${item.url}" download="${item.filename}" target="_blank"
+              class="text-xs py-2 px-4 rounded-xl font-bold" style="background:rgba(255,255,255,0.07);color:var(--gray);text-decoration:none">⬇ 下载</a>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+};
+
+function viewFile(url, ext, title, dlUrl) {
+  document.getElementById('viewTitle').textContent = title;
+  document.getElementById('viewDownload').href = dlUrl;
+  document.getElementById('viewDownload').download = title;
+  const body = document.getElementById('viewBody');
+  const isVideo = ['mp4','mov','webm','avi'].includes(ext);
+  if (isVideo) {
+    body.innerHTML = `<video src="${url}" controls style="width:100%;max-height:60vh;background:#000"></video>`;
+  } else if (ext === 'pdf') {
+    body.innerHTML = `<iframe src="${url}" style="width:100%;height:60vh;border:none"></iframe>`;
+  } else {
+    const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+    body.innerHTML = `<iframe src="${viewerUrl}" style="width:100%;height:60vh;border:none"></iframe>
+      <p style="text-align:center;font-size:12px;color:#475569;padding:8px">如果预览加载慢，请点击下载查看</p>`;
+  }
+  document.getElementById('viewModal').classList.remove('hidden');
+}
+
+function closeView() {
+  document.getElementById('viewModal').classList.add('hidden');
+  document.getElementById('viewBody').innerHTML = '';
+}
+</script>
+</body>
+</html>
